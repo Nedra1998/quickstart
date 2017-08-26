@@ -6,18 +6,69 @@ from os import path
 def load_files(data):
     source_dir = path.join(data['root'], data['source_dir'])
     include_dir = path.join(data['root'], data['include_dir'])
-    test_dir = path.join(data['root'], data['test_dir'])
     build_dir = path.join(data['root'], data['build_dir'])
     ext_dir = path.join(data['root'], data['ext_dir'])
-    doc_dir = path.join(data['root'], data['doc_dir'])
-    folders = [source_dir, include_dir, build_dir, ext_dir]
-    if data['tests'] is True:
-        folders.append(test_dir)
-    if data['docs'] is True:
-        folders.append(doc_dir)
+    folders = [data['root'], source_dir, include_dir, build_dir, ext_dir]
+    files = [('cpp/source/main.cpp', path.join(source_dir, 'main.cpp'))]
+    commands = []
+    replace = [("project_name", data['name']), ("project_title",
+                                                data['name'].title()),
+               ("project_description",
+                data['description']), ("project_type",
+                                       data['type']), ("project_source_dir",
+                                                       data['source_dir']),
+               ("project_include_dir",
+                data['include_dir']), ("project_build_dir",
+                                       data['build_dir']), ("project_ext_dir",
+                                                            data['ext_dir'])]
+    if data['git'] is True:
+        commands.append("git init")
+        files.append(("cpp/.gitignore", path.join(data['root'], ".gitignore")))
+        if data['tests'] is True:
+            commands.append(
+                "git submodule add https://github.com/google/googletest")
 
-    files = [('main.cpp', path.join(source_dir, 'main.cpp'))]
-    return folders, files
+    if data['tests'] is True:
+        test_dir = path.join(data['root'], data['test_dir'])
+        folders.append(test_dir)
+        files.append(("cpp/test/tmp.cpp", path.join(test_dir, "tmp.cpp")))
+        replace.append(("project_test_dir", data['test_dir']))
+
+    if data['docs'] is True:
+        doc_dir = path.join(data['root'], data['doc_dir'])
+        folders.append(doc_dir)
+        replace.append(("project_doc_dir", data['doc_dir']))
+        if data['doc-sys'] == "MkDocs":
+            files.append(('cpp/mkdocs.yml', path.join(data['root'],
+                                                      'mkdocs.yml')))
+            files.append(('cpp/docs/index.md', path.join(doc_dir, 'index.md')))
+        elif data['doc-sys'] == "Sphinx":
+            pass
+
+    if data['comp'] == "GNU Make":
+        files.append(("cpp/Makefile", path.join(data['root'], "Makefile")))
+        files.append(("cpp/source/Makefile", path.join(source_dir, "Makefile")))
+        if data['tests'] is True:
+            files.append(("cpp/test/Makefile", path.join(
+                data['root'], data['test_dir'], "Makefile")))
+
+    if data['ci'] is True:
+        ciFile = ["cpp/", ""]
+        if data['ci-server'] == "Travis-CI":
+            ciFile[0] += "travis"
+            ciFile[1] = path.join(data['root'], ".travis.yml")
+
+        if data['deploy-pages'] is True:
+            ciFile[0] += "_dp"
+
+        if data['coverage'] == "CodeCov":
+            ciFile[0] += "_cc"
+            files.append(("cpp/.codecov.yml", path.join(data['root'],
+                                                        ".codecov.yml")))
+        ciFile[0] += ".yml"
+        files.append(ciFile)
+
+    return folders, files, commands, replace
 
 
 def main(data):
@@ -65,5 +116,5 @@ def main(data):
         out.Prompt(data, 'pip-install', 'Install from pip', '', out.is_list)
         out.SelectList(data, 'coverage', "Code Coverage", ['CodeCov', 'None'],
                        False)
-        print()
+    print()
     return load_files(data)

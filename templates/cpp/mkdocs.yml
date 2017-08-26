@@ -1,0 +1,37 @@
+site_name: Cli
+theme: 'material'
+extra:
+  feature:
+    tabs: true
+  palette:
+    primary: 'pink'
+    accent: 'blue'
+extra_javascript:
+  - 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML'
+extra_css:
+  - 'css/extra.css'
+google_analytics:
+  - 'UA-104338919-3'
+  - 'auto'
+markdown_extensions:
+  - admonition
+  - codehilite(guess_lang=false)
+  - toc(permalink=true)
+  - meta
+  - pymdownx.betterem(smart_enable=all)
+  - pymdownx.superfences
+  - pymdownx.tasklist
+  - pymdownx.tilde
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.arithmatex
+repo_name: 'Cli'
+repo_url: 'https://github.com/LuxAtrumStudio/Cli'
+pages:
+  - 'Home': 'index.md'
+  - 'Tutorial':
+    - 'Home': 'tut/index.md'
+  - 'Reference':
+    - 'Home': 'ref/index.md'
+    - 'Any': 'ref/any.md'
+    - 'Parser': 'ref/parser.md'
