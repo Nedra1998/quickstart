@@ -10,6 +10,19 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
+import os
+
+
+def package_files(directory):
+    paths = []
+    for (path, directories, filenames) in os.walk(directory):
+        for filename in filenames:
+            paths.append(os.path.join('..', path, filename))
+    return paths
+
+
+extra_files = package_files('quickstart/templates')
+
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
@@ -22,7 +35,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.3',
+    version='0.3.7',
     description='A utility to rappidly generate programming templates',
     long_description=long_description,
 
@@ -52,8 +65,6 @@ setup(
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
@@ -65,7 +76,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=find_packages(exclude=['contrib', 'docs', 'tests']),
+    packages=find_packages(exclude=['docs', 'tests']),
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
@@ -89,9 +100,7 @@ setup(
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
-    #  package_data={
-    #  'sample': ['package_data.dat'],
-    #  },
+    package_data={'': extra_files},
 
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:
@@ -103,7 +112,5 @@ setup(
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
-        'console_scripts': [
-            'Quickstart=Quickstart:main',
-        ],
+        'console_scripts': ['Quickstart = quickstart.quickstart:main']
     },)
