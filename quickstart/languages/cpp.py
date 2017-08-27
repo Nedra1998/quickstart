@@ -9,7 +9,8 @@ def load_files(data):
     build_dir = path.join(data['root'], data['build_dir'])
     ext_dir = path.join(data['root'], data['ext_dir'])
     folders = [data['root'], source_dir, include_dir, build_dir, ext_dir]
-    files = [('cpp/source/main.cpp', path.join(source_dir, 'main.cpp'))]
+    files = [('cpp/source/main.cpp', path.join(source_dir, 'main.cpp')),
+             ('cpp/clang-format', path.join(data['root'], 'clang-format'))]
     commands = []
     replace = [("project_name", data['name']), ("project_title",
                                                 data['name'].title()),
@@ -21,13 +22,14 @@ def load_files(data):
                 data['include_dir']), ("project_build_dir",
                                        data['build_dir']), ("project_ext_dir",
                                                             data['ext_dir'])]
+
     if data['git'] is True:
         commands.append("cd %s && git init" % data['root'])
         files.append(("cpp/.gitignore", path.join(data['root'], ".gitignore")))
         if data['tests'] is True:
             commands.append(
-                "git submodule add https://github.com/google/googletest %s/googletest"
-                % ext_dir)
+                "cd %s && git submodule add https://github.com/google/googletest %s/googletest"
+                % (data['root'], data['ext_dir']))
 
     if data['tests'] is True:
         test_dir = path.join(data['root'], data['test_dir'])
@@ -44,9 +46,12 @@ def load_files(data):
         folders.append(doc_dir)
         replace.append(("project_doc_dir", data['doc_dir']))
         if data['doc-sys'] == "MkDocs":
+            folders.append(path.join(doc_dir, 'css'))
             files.append(('cpp/mkdocs.yml', path.join(data['root'],
                                                       'mkdocs.yml')))
             files.append(('cpp/docs/index.md', path.join(doc_dir, 'index.md')))
+            files.append(('cpp/docs/css/extra.css', path.join(
+                doc_dir, 'css/extra.md')))
         elif data['doc-sys'] == "Sphinx":
             pass
 

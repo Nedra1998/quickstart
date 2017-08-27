@@ -6,6 +6,8 @@ import console as out
 
 __display_version__ = "v0.3"
 
+__bin_dir__ = os.path.dirname(__file__)
+
 
 def mkdir(dir):
     if path.isdir(dir):
@@ -14,7 +16,7 @@ def mkdir(dir):
 
 
 def write(source, dest, replace_list):
-    source = "templates/" + source
+    source = path.join(__bin_dir__, "templates/", source)
     with open(source, 'r') as file:
         filedata = file.read()
 

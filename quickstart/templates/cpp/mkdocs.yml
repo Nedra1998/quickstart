@@ -1,4 +1,4 @@
-site_name: Cli
+site_name: project_title
 theme: 'material'
 extra:
   feature:
@@ -25,13 +25,7 @@ markdown_extensions:
   - pymdownx.caret
   - pymdownx.mark
   - pymdownx.arithmatex
-repo_name: 'Cli'
-repo_url: 'https://github.com/LuxAtrumStudio/Cli'
+repo_name: 'project_title'
+repo_url: 'https://github.com/LuxAtrumStudio/project_title'
 pages:
   - 'Home': 'index.md'
-  - 'Tutorial':
-    - 'Home': 'tut/index.md'
-  - 'Reference':
-    - 'Home': 'ref/index.md'
-    - 'Any': 'ref/any.md'
-    - 'Parser': 'ref/parser.md'

@@ -1,15 +1,15 @@
 SHELL = /bin/bash
 
-export NAME= cli
-export LINK=
+export NAME= project_name
+export LINK= 
 export INCLUDE=
-export TYPE= lib
+export TYPE= project_type
 
-export SOURCE_DIR= source
-export TEST_DIR= test
-export EXTERNAL_DIR= external
-export BUILD_DIR= build
-export INCLUDE_DIR= include
+export SOURCE_DIR= project_source_dir
+export TEST_DIR= project_test_dir
+export EXTERNAL_DIR = project_ext_dir
+export BUILD_DIR= project_build_dir
+export INCLUDE_DIR= project_include_dir
 
 export BASE_PATH=$(shell pwd)
 
