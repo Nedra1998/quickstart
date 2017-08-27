@@ -14,6 +14,7 @@ def mkdir(dir):
 
 
 def write(source, dest, replace_list):
+    source = "templates/" + source
     with open(source, 'r') as file:
         filedata = file.read()
 
@@ -31,23 +32,25 @@ def gen_folders(folders):
         print(out.green("Generated ") + out.magenta("\"%s\"" % path))
 
 
-def gen_files(files):
+def gen_files(files, replace):
     out.Section("Files", 25)
     for source, dest in files:
+        write(source, dest, replace)
         print(out.green("Copied ") + out.magenta("\"%s\"" % str(source)))
 
 
-def gen_commands(commands):
+def gen_commands(commands, root):
     out.Section("Commands", 25)
     for exe in commands:
+        os.system(exe)
         print(out.green("Ran ") + out.magenta("\"%s\"" % str(exe)))
 
 
-def generate(files, folders, commands, replace):
+def generate(files, folders, commands, replace, root):
     out.Title("Genrating", 25)
     gen_folders(folders)
-    gen_files(files)
-    gen_commands(commands)
+    gen_files(files, replace)
+    gen_commands(commands, root)
 
 
 def main():
@@ -67,7 +70,7 @@ def main():
     else:
         print(out.red("Not a valid type \"%s\"" % lang))
 
-    generate(files, folders, commands, replace)
+    generate(files, folders, commands, replace, data['root'])
 
 
 if __name__ == "__main__":

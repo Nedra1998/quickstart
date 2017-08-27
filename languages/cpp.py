@@ -22,17 +22,22 @@ def load_files(data):
                                        data['build_dir']), ("project_ext_dir",
                                                             data['ext_dir'])]
     if data['git'] is True:
-        commands.append("git init")
+        commands.append("cd %s && git init" % data['root'])
         files.append(("cpp/.gitignore", path.join(data['root'], ".gitignore")))
         if data['tests'] is True:
             commands.append(
-                "git submodule add https://github.com/google/googletest")
+                "git submodule add https://github.com/google/googletest %s/googletest"
+                % ext_dir)
 
     if data['tests'] is True:
         test_dir = path.join(data['root'], data['test_dir'])
         folders.append(test_dir)
         files.append(("cpp/test/tmp.cpp", path.join(test_dir, "tmp.cpp")))
+        files.append(("cpp/external/Makefile_t", path.join(ext_dir,
+                                                           "Makefile")))
         replace.append(("project_test_dir", data['test_dir']))
+    else:
+        files.append(("cpp/external/Makefile", path.join(ext_dir, "Makefile")))
 
     if data['docs'] is True:
         doc_dir = path.join(data['root'], data['doc_dir'])
