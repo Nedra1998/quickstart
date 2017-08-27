@@ -4,7 +4,19 @@ Quickstart
 Quickstart is a utility for quickly creating project templates for a variety of
 languages.
 
-Currently Quickstart supports:
+To run the utility, just run ``Quickstart``, and the prompt will guide the user
+through the settings.
+
+Languages
+---------
+
  - ``C++``
 
+
+Utilities
+---------
+
+ - ``Travis-CI``
+ - ``CodeCov``
+ - ``MkDocs``
 

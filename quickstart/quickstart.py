@@ -2,20 +2,25 @@
 
 import os
 from os import path
-import console as out
+import quickstart.console as out
 
 __display_version__ = "v0.3"
 
 __bin_dir__ = os.path.dirname(__file__)
 
 
-def mkdir(dir):
-    if path.isdir(dir):
+def mkdir(folder):
+    """Creates a new directory at dir"""
+    if path.isdir(folder):
         return
-    os.makedirs(dir)
+    os.makedirs(folder)
 
 
 def write(source, dest, replace_list):
+    """
+    Creates a file copied from source to dest, and replaces matches with
+    replacement from replace_list
+    """
     source = path.join(__bin_dir__, "templates/", source)
     with open(source, 'r') as file:
         filedata = file.read()
@@ -28,51 +33,57 @@ def write(source, dest, replace_list):
 
 
 def gen_folders(folders):
-    out.Section("Folders", 25)
-    for path in folders:
-        mkdir(path)
-        print(out.green("Generated ") + out.magenta("\"%s\"" % path))
+    """Generates all folders for project"""
+    out.section("Folders", 25)
+    for folder in folders:
+        mkdir(folder)
+        print(out.green("Generated ") + out.magenta("\"%s\"" % folder))
 
 
 def gen_files(files, replace):
-    out.Section("Files", 25)
+    """Generates all files for project"""
+    out.section("Files", 25)
     for source, dest in files:
         write(source, dest, replace)
         print(out.green("Copied ") + out.magenta("\"%s\"" % str(source)))
 
 
-def gen_commands(commands, root):
-    out.Section("Commands", 25)
+def gen_commands(commands):
+    """Run all commands for project"""
+    out.section("Commands", 25)
     for exe in commands:
         os.system(exe)
         print(out.green("Ran ") + out.magenta("\"%s\"" % str(exe)))
 
 
-def generate(files, folders, commands, replace, root):
-    out.Title("Genrating", 25)
+def generate(files, folders, commands, replace):
+    """Generates project folders/files/commands"""
+    out.title("Genrating", 25)
     gen_folders(folders)
     gen_files(files, replace)
-    gen_commands(commands, root)
+    gen_commands(commands)
 
 
 def main():
-    out.Clear()
-    out.Title("Quickstart Utility %s" % __display_version__, 25)
+    """allows user to enter data for project, and genorates project"""
+    out.clear()
+    out.title("Quickstart Utility %s" % __display_version__, 25)
     data = {}
-    out.SelectList(data, 'lang', "Languages", ["C++", "Python"])
+    out.select_list(data, 'lang', "Languages", ["C++", "C++ (Default)"])
     folders = []
     files = []
     print()
     if data['lang'] == "C++":
-        import languages.cpp
-        folders, files, commands, replace = languages.cpp.main(data)
-    elif data['lang'] == "Python":
-        import languages.python
-        #  folders, files, commands = languages.python.main(data)
+        import quickstart.languages.cpp
+        folders, files, commands, replace = quickstart.languages.cpp.main(data)
+    elif data['lang'] == "C++ (Default)":
+        import quickstart.languages.cpp
+        folders, files, commands, replace = quickstart.languages.cpp.default(
+            data)
     else:
-        print(out.red("Not a valid type \"%s\"" % lang))
+        print(out.red("Not a valid type \"%s\"" % data['lang']))
 
-    generate(files, folders, commands, replace, data['root'])
+    generate(files, folders, commands, replace)
 
 
 if __name__ == "__main__":

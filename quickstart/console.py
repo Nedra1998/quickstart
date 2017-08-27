@@ -2,47 +2,57 @@
 
 import subprocess
 from os import path
-import sys, tty, termios
+import sys
+import tty
+import termios
 
 
 class ValidationError(Exception):
     """Raised for validation errors."""
 
 
-def is_path(x):
-    x = path.expanduser(x)
-    if path.exists(x) and not path.isdir(x):
+def is_path(i):
+    """Checks if entered value is a path"""
+    i = path.expanduser(i)
+    if path.exists(i) and not path.isdir(i):
         raise ValidationError("Please enter a valid path name.")
-    return x
+    return i
 
 
-def allow_empty(x):
-    return x
+def allow_empty(i):
+    """Validates on all entered values"""
+    return i
 
 
-def nonempty(x):
-    if not x:
+def nonempty(i):
+    """Validates on only non empty values"""
+    if not i:
         raise ValidationError("Please enter some text.")
-    return x
+    return i
 
 
-def boolean(x):
-    if x.upper() not in ('Y', 'YES', 'N', 'NO'):
+def boolean(i):
+    """Checks if entered value is some boolean"""
+    if i.upper() not in ('Y', 'YES', 'N', 'NO'):
         raise ValidationError("Please enter either 'y' or 'n'.")
-    return x.upper() in ('Y', 'YES')
+    return i.upper() in ('Y', 'YES')
 
 
-def is_type(x):
-    if x.upper() not in ('LIB', 'EXE'):
+def is_type(i):
+    """Checks is entered value is either lib or exe"""
+    if i.upper() not in ('LIB', 'EXE'):
         raise ValidationError("Pleasse enter either 'lib' or 'exe'.")
-    return x
+    return i
 
 
-def is_list(x):
-    x = [str(y) for y in x.split()]
+def is_list(i):
+    """Converts entered value into a list"""
+    i = i.split(' ')
+    return i
 
 
-def Title(text, size=-1):
+def title(text, size=-1):
+    """Prints underlined title"""
     print(white(bold(text)))
     if size != -1:
         print(white(bold("=" * size)))
@@ -50,7 +60,8 @@ def Title(text, size=-1):
         print(white(bold("=" * len(text))))
 
 
-def SubTitle(text, size=-1):
+def sub_title(text, size=-1):
+    """Prints underlined subtitle"""
     print(white(text))
     if size != -1:
         print(white("-" * size))
@@ -58,7 +69,8 @@ def SubTitle(text, size=-1):
         print(white("-" * len(text)))
 
 
-def Section(text, size=-1):
+def section(text, size=-1):
+    """Prints section title"""
     if size != -1 and size > len(text):
         width = int((size - len(text)) / 2)
         print(cyan("\n" + '=' * width + text + '=' * width + "\n"))
@@ -66,72 +78,96 @@ def Section(text, size=-1):
         print(cyan(text))
 
 
-def term_input(prompt):
-    print(prompt, end='')
+def term_input(prompt_str):
+    """Gets input from user"""
+    print(prompt_str, end='')
     print('\033[1m', end='')
     out = input('')
     print('\033[21m', end='')
     return out
 
 
-def Prompt(data, name, description, default=None, validator=nonempty, indent=0):
+def prompt(data, name, description, default=None, validator=nonempty, indent=0):
+    """Runs prompt for specified data"""
     if name in data:
-        print(' ' * indent + bold(description + ': %s' % data[name]))
+        if default is not None:
+            if data[name] is True:
+                print(' ' * indent + magenta(
+                    "%s [%s]: " % (description, default)) + bold("Yes"))
+            elif data[name] is False:
+                print(' ' * indent + magenta(
+                    "%s [%s]: " % (description, default)) + bold("No"))
+            else:
+                print(' ' * indent + magenta("%s [%s]: " % (
+                    description, default)) + bold("%s" % data[name]))
+        else:
+            if data[name] is True:
+                print(' ' * indent + magenta("%s: " % description) +
+                      bold("True"))
+            elif data[name] is False:
+                print(' ' * indent + magenta("%s: " % description) +
+                      bold("False"))
+            else:
+                print(' ' * indent + magenta("%s: " % description) + bold(
+                    "%s" % data[name]))
     else:
         while True:
             if default is not None:
-                prompt = ' ' * indent + '%s [%s]: ' % (description, default)
+                prompt_str = ' ' * indent + '%s [%s]: ' % (description, default)
             else:
-                prompt = ' ' * indent + description + ': '
-            prompt = prompt.encode('utf-8')
-            prompt = magenta(prompt.decode("utf-8"))
-            x = term_input(prompt).strip()
-            if default and not x:
-                x = default
+                prompt_str = ' ' * indent + description + ': '
+            prompt_str = prompt_str.encode('utf-8')
+            prompt_str = magenta(prompt_str.decode("utf-8"))
+            i = term_input(prompt_str).strip()
+            if default and not i:
+                i = default
             try:
-                x = validator(x)
+                i = validator(i)
             except ValidationError as err:
                 print(' ' * indent + bold(red('* ' + str(err))))
                 continue
             break
-        if x is default or x is True or x is False:
+        if i is default or i is True or i is False:
             print("\033[1A\r", end='')
             if default is not None:
-                if x is True:
+                if i is True:
                     print(' ' * indent + magenta(
                         "%s [%s]: " % (description, default)) + bold("Yes"))
-                elif x is False:
+                elif i is False:
                     print(' ' * indent + magenta(
                         "%s [%s]: " % (description, default)) + bold("No"))
                 else:
                     print(' ' * indent + magenta(
-                        "%s [%s]: " % (description, default)) + bold("%s" % x))
+                        "%s [%s]: " % (description, default)) + bold("%s" % i))
             else:
-                if x is True:
+                if i is True:
                     print(' ' * indent + magenta("%s: " % description) +
                           bold("True"))
-                elif x is False:
+                elif i is False:
                     print(' ' * indent + magenta("%s: " % description) +
                           bold("False"))
                 else:
                     print(' ' * indent + magenta("%s: " % description) + bold(
-                        "%s" % x))
-        data[name] = x
+                        "%s" % i))
+        data[name] = i
 
 
-def SelectList(data, name, title, options, show_title=True):
+def select_list(data, name, disp, options, show_title=True):
+    """Select data option from interactive list"""
     select = 0
     if show_title is True:
-        SubTitle(title, 25)
+        sub_title(disp, 25)
     if show_title is False:
-        print(magenta(title))
+        print(magenta(disp))
     running = True
+    if name in data:
+        running = False
     while running is True:
-        for i, x in enumerate(options):
+        for i, string in enumerate(options):
             if i == select:
-                print("  " + reverse(magenta("(%i) " % i + x)))
+                print("  " + reverse(magenta("(%i) " % i + string)))
             else:
-                print("  " + magenta("(%i) " % i + x))
+                print("  " + magenta("(%i) " % i + string))
         print(">>\033[1m", end='')
         key = input()
         print("\033[21m")
@@ -143,40 +179,52 @@ def SelectList(data, name, title, options, show_title=True):
             for i in range(0, len(options) + 2):
                 print("\033[1A\r" + ' ' * 25 + '\r', end='')
     if show_title is False:
-        for i in range(0, len(options) + 3):
+        if name not in data:
+            for i in range(0, len(options) + 3):
+                print("\033[1A\r" + ' ' * 25 + '\r', end='')
+        else:
             print("\033[1A\r" + ' ' * 25 + '\r', end='')
-        print(magenta("%s [%s]: " % (title, options[0])) +
+        print(magenta("%s [%s]: " % (disp, options[0])) +
               bold(white("%s" % options[select])))
     else:
-        for i in range(0, len(options) + 2):
+        if name not in data:
+            for i in range(0, len(options) + 2):
+                print("\033[1A\r" + ' ' * 25 + '\r', end='')
+        else:
             print("\033[1A\r" + ' ' * 25 + '\r', end='')
-        for i, x in enumerate(options):
+        for i, string in enumerate(options):
             if i == select:
-                print("  " + bold(white("(%i) %s" % (i, x))))
+                print("  " + bold(white("(%i) %s" % (i, string))))
             else:
-                print("  " + magenta("(%i) %s" % (i, x)))
+                print("  " + magenta("(%i) %s" % (i, string)))
     data[name] = options[select]
 
 
-def SetCursor(line, col):
+def set_cursor(line, col):
+    """Sets the terminal cursor position"""
     print("\033[%i;%iH" % (line, col))
 
 
-def Clear():
+def clear():
+    """Clears the terminal of output"""
     subprocess.call("clear", shell=True)
 
 
-def CreateAttr(name):
+def create_attr(name):
+    """Creates set attibute functions"""
 
     def inner(text):
+        """Sets text to use applied attibute"""
         return "\033[%s" % _attrs[name][0] + text + "\033[%s" % _attrs[name][1]
 
     globals()[name] = inner
 
 
-def CreateColor(name):
+def create_color(name):
+    """Creates set color functions"""
 
     def inner(text):
+        """Sets text to use applied color"""
         return "\033[%s" % _colors[name][0] + text + "\033[%s" % _colors[name][1]
 
     globals()[name] = inner
@@ -203,22 +251,22 @@ _colors = {
 }
 
 for _name in _attrs:
-    CreateAttr(_name)
+    create_attr(_name)
 for _name in _colors:
-    CreateColor(_name)
+    create_color(_name)
 
 
 class _Getch:
 
     def __call__(self, count):
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
+        fdin = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fdin)
         try:
             tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(count)
+            chin = sys.stdin.read(count)
         finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch
+            termios.tcsetattr(fdin, termios.TCSADRAIN, old_settings)
+        return chin
 
 
 getch = _Getch()

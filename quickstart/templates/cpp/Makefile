@@ -1,7 +1,7 @@
 SHELL = /bin/bash
 
 export NAME= project_name
-export LINK= 
+export LINK= project_link
 export INCLUDE=
 export TYPE= project_type
 
