@@ -64,7 +64,15 @@ def load_files(data):
             if "pygments" not in data['pip-install']:
                 data['pip-install'].append("pygments")
         elif data['doc-sys'] == "Sphinx":
-            pass
+            folders.append(path.join(doc_dir, 'source'))
+            folders.append(path.join(doc_dir, 'source', '_static'))
+            files.append(('cpp/docs/Makefile', path.join(doc_dir, 'index.md')))
+            files.append(('cpp/docs/source/conf.py', path.join(
+                doc_dir, 'source', 'conf.py')))
+            files.append(('cpp/docs/source/index.rst', path.join(
+                doc_dir, 'source', 'index.rst')))
+            if "sphinx" not in data['pip-install']:
+                data['pip-install'].append("sphinx")
 
     if data['comp'] == "GNU Make":
         files.append(("cpp/Makefile", path.join(data['root'], "Makefile")))
