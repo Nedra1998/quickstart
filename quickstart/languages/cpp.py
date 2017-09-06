@@ -2,11 +2,68 @@
 
 import os
 from os import path
-import quickstart.console as out
+#  import quickstart.console as out
+import console as out
+
+source_dir = ""
+include_dir = ""
+build_dir = ""
+ext_dir = ""
+test_dir = ""
+
+
+def git_setting(data, folders, files, commands, replace):
+    commands.append("cd %s && git init" % data['root'])
+    files.append(("cpp/.gitignore", path.join(data['root'], ".gitignore")))
+    if data['tests'] is True:
+        commands.append(
+            "cd {} && git submodule add https://github.com/google/googletest {}/googletest".
+            format(data['root'], data['ext_dir']))
+
+
+def test_setting(data, folders, files, commands, replace):
+    """Sets test settings if enbabled"""
+    global test_dir
+    test_dir = path.join(data['root'], data['test_dir'])
+    folders.append(test_dir)
+    files.append(("cpp/test/tmp.cpp", path.join(test_dir, "tmp.cpp")))
+    files.append(("cpp/external/Makefile_t", path.join(ext_dir, "Makefile")))
+    replace.append(("project_test_dir", data['test_dir']))
+
+
+def test_false(data, folders, files, commands, replace):
+    files.append(("cpp/external/Makefile", path.join(ext_dir, "Makefile")))
+
+
+def doc_setting(data, folder, files, commands, replace):
+    doc_dir = path.join(data['root'], data['doc_dir'])
+    folders.append(doc_dir)
+    replace.append(("project_doc_dir", data['doc_dir']))
+    if data['doc-sys'] == "MkDocs":
+        folders.append(path.join(doc_dir, 'css'))
+        files.append(('cpp/mkdocs.yml', path.join(data['root'], 'mkdocs.yml')))
+        files.append(('cpp/docs/index.md', path.join(doc_dir, 'index.md')))
+        files.append(('cpp/docs/css/extra.css', path.join(
+            doc_dir, 'css/extra.md')))
+        if "mkdocs" not in data['pip-install']:
+            data['pip-install'].append("mkdocs")
+        if "pygments" not in data['pip-install']:
+            data['pip-install'].append("pygments")
+    elif data['doc-sys'] == "Sphinx":
+        folders.append(path.join(doc_dir, 'source'))
+        folders.append(path.join(doc_dir, 'source', '_static'))
+        files.append(('cpp/docs/Makefile', path.join(doc_dir, 'index.md')))
+        files.append(('cpp/docs/source/conf.py', path.join(
+            doc_dir, 'source', 'conf.py')))
+        files.append(('cpp/docs/source/index.rst', path.join(
+            doc_dir, 'source', 'index.rst')))
+        if "sphinx" not in data['pip-install']:
+            data['pip-install'].append("sphinx")
 
 
 def load_files(data):
     """Sets folders, files, replacement strings and commands"""
+    global source_dir, include_dir, build_dir, ext_dir
     source_dir = path.join(data['root'], data['source_dir'])
     include_dir = path.join(data['root'], data['include_dir'])
     build_dir = path.join(data['root'], data['build_dir'])
@@ -31,48 +88,15 @@ def load_files(data):
     replace.append(("project_link", ''.join(data['link'])))
 
     if data['git'] is True:
-        commands.append("cd %s && git init" % data['root'])
-        files.append(("cpp/.gitignore", path.join(data['root'], ".gitignore")))
-        if data['tests'] is True:
-            commands.append(
-                "cd %s && git submodule add https://github.com/google/googletest %s/googletest"
-                % (data['root'], data['ext_dir']))
+        git_setting(data, folders, files, commands, replace)
 
-            if data['tests'] is True:
-                test_dir = path.join(data['root'], data['test_dir'])
-        folders.append(test_dir)
-        files.append(("cpp/test/tmp.cpp", path.join(test_dir, "tmp.cpp")))
-        files.append(("cpp/external/Makefile_t", path.join(ext_dir,
-                                                           "Makefile")))
-        replace.append(("project_test_dir", data['test_dir']))
+    if data['tests'] is True:
+        test_setting(data, folders, files, commands, replace)
     else:
-        files.append(("cpp/external/Makefile", path.join(ext_dir, "Makefile")))
+        test_false(data, folders, files, commands, replace)
 
     if data['docs'] is True:
-        doc_dir = path.join(data['root'], data['doc_dir'])
-        folders.append(doc_dir)
-        replace.append(("project_doc_dir", data['doc_dir']))
-        if data['doc-sys'] == "MkDocs":
-            folders.append(path.join(doc_dir, 'css'))
-            files.append(('cpp/mkdocs.yml', path.join(data['root'],
-                                                      'mkdocs.yml')))
-            files.append(('cpp/docs/index.md', path.join(doc_dir, 'index.md')))
-            files.append(('cpp/docs/css/extra.css', path.join(
-                doc_dir, 'css/extra.md')))
-            if "mkdocs" not in data['pip-install']:
-                data['pip-install'].append("mkdocs")
-            if "pygments" not in data['pip-install']:
-                data['pip-install'].append("pygments")
-        elif data['doc-sys'] == "Sphinx":
-            folders.append(path.join(doc_dir, 'source'))
-            folders.append(path.join(doc_dir, 'source', '_static'))
-            files.append(('cpp/docs/Makefile', path.join(doc_dir, 'index.md')))
-            files.append(('cpp/docs/source/conf.py', path.join(
-                doc_dir, 'source', 'conf.py')))
-            files.append(('cpp/docs/source/index.rst', path.join(
-                doc_dir, 'source', 'index.rst')))
-            if "sphinx" not in data['pip-install']:
-                data['pip-install'].append("sphinx")
+        doc_setting(data, folders, files, commands, replace)
 
     if data['comp'] == "GNU Make":
         files.append(("cpp/Makefile", path.join(data['root'], "Makefile")))
@@ -81,8 +105,8 @@ def load_files(data):
             files.append(("cpp/test/Makefile", path.join(
                 data['root'], data['test_dir'], "Makefile")))
 
-    if data['ci'] is True:
-        ci_file = ["cpp/", ""]
+            if data['ci'] is True:
+                ci_file = ["cpp/", ""]
         if data['ci-server'] == "Travis-CI":
             ci_file[0] += "travis"
             ci_file[1] = path.join(data['root'], ".travis.yml")
@@ -95,7 +119,7 @@ def load_files(data):
             files.append(("cpp/.codecov.yml", path.join(data['root'],
                                                         ".codecov.yml")))
 
-        ci_file[0] += ".yml"
+            ci_file[0] += ".yml"
         files.append(ci_file)
 
         project_apt = "- sudo apt-get install "
@@ -139,9 +163,11 @@ def main(data):
     else:
         out.prompt(data, 'root', 'Root directory', data['name'].lower(),
                    out.is_path)
-    out.prompt(data, 'source_dir', 'Source directory', 'source', out.is_path)
-    out.prompt(data, 'include_dir', 'Include directory', 'include', out.is_path)
-    out.prompt(data, 'build_dir', 'Build directory', 'build', out.is_path)
+        out.prompt(data, 'source_dir', 'Source directory', 'source',
+                   out.is_path)
+        out.prompt(data, 'include_dir', 'Include directory', 'include',
+                   out.is_path)
+        out.prompt(data, 'build_dir', 'Build directory', 'build', out.is_path)
     out.prompt(data, 'ext_dir', 'External directory', 'external', out.is_path)
     out.section("Unit Tests", 25)
     out.prompt(data, 'tests', 'Enable unit tests', 'Yes', out.boolean)
