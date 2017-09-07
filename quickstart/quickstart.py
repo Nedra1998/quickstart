@@ -2,10 +2,10 @@
 
 import os
 from os import path
-#  import quickstart.console as out
-import console as out
+import quickstart.console as out
+#  import console as out
 
-__display_version__ = "v0.3"
+__display_version__ = "v0.4"
 
 __bin_dir__ = os.path.dirname(__file__)
 
@@ -75,12 +75,12 @@ def main():
     files = []
     print()
     if data['lang'] == "C++":
-        #  import quickstart.languages.cpp
-        import languages.cpp as cpp
+        import quickstart.languages.cpp as cpp
+        #  import languages.cpp as cpp
         folders, files, commands, replace = cpp.main(data)
     elif data['lang'] == "C++ (Default)":
-        #  import quickstart.languages.cpp
-        import languages.cpp as cpp
+        import quickstart.languages.cpp as cpp
+        #  import languages.cpp as cpp
         folders, files, commands, replace = cpp.default(data)
     else:
         print(out.red("Not a valid type \"%s\"" % data['lang']))

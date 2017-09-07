@@ -2,8 +2,8 @@
 
 import os
 from os import path
-#  import quickstart.console as out
-import console as out
+import quickstart.console as out
+#  import console as out
 
 source_dir = ""
 include_dir = ""
@@ -29,13 +29,17 @@ def test_setting(data, folders, files, commands, replace):
     files.append(("cpp/test/tmp.cpp", path.join(test_dir, "tmp.cpp")))
     files.append(("cpp/external/Makefile_t", path.join(ext_dir, "Makefile")))
     replace.append(("project_test_dir", data['test_dir']))
+    if data['git'] is False:
+        commands.append(
+            "cd {} && git clone https://github.com/google/googletest {}/googletest".
+            format(data['root'], data['ext_dir']))
 
 
 def test_false(data, folders, files, commands, replace):
     files.append(("cpp/external/Makefile", path.join(ext_dir, "Makefile")))
 
 
-def doc_setting(data, folder, files, commands, replace):
+def doc_setting(data, folders, files, commands, replace):
     doc_dir = path.join(data['root'], data['doc_dir'])
     folders.append(doc_dir)
     replace.append(("project_doc_dir", data['doc_dir']))
@@ -61,6 +65,51 @@ def doc_setting(data, folder, files, commands, replace):
             data['pip-install'].append("sphinx")
 
 
+def comp_settings(data, folders, files, commands, replace):
+    global test_dir
+    if data['comp'] == "GNU Make":
+        files.append(("cpp/Makefile", path.join(data['root'], "Makefile")))
+        files.append(("cpp/source/Makefile", path.join(source_dir, "Makefile")))
+        if data['tests'] is True:
+            files.append(("cpp/test/Makefile", path.join(test_dir, "Makefile")))
+
+
+def ci_settings(data, folders, files, commands, replace):
+    ci_file = ["cpp/", ""]
+    if data['ci-server'] == "Travis-CI":
+        ci_file[0] += "travis"
+        ci_file[1] = path.join(data['root'], ".travis.yml")
+
+    if data['deploy-pages'] is True:
+        ci_file[0] += "_dp"
+
+    if data['coverage'] == "CodeCov":
+        ci_file[0] += "_cc"
+        files.append(("cpp/.codecov.yml", path.join(data['root'],
+                                                    ".codecov.yml")))
+
+        ci_file[0] += ".yml"
+    files.append(ci_file)
+
+    project_apt = "- sudo apt-get install "
+    if data['apt-install'] == []:
+        project_apt = ""
+    else:
+        for pack in data['apt-install']:
+            project_apt += str(pack) + ' '
+
+    replace.append(("project_apt", str(project_apt)))
+
+    project_pip = "- sudo pip install "
+    if data['pip-install'] == []:
+        project_pip = ""
+    else:
+        for pack in data['pip-install']:
+            project_pip += str(pack) + ' '
+
+    replace.append(("project_pip", str(project_pip)))
+
+
 def load_files(data):
     """Sets folders, files, replacement strings and commands"""
     global source_dir, include_dir, build_dir, ext_dir
@@ -70,7 +119,8 @@ def load_files(data):
     ext_dir = path.join(data['root'], data['ext_dir'])
 
     for i, string in enumerate(data['link']):
-        data['link'][i] = '-l' + string + ' '
+        if len(string) > 0:
+            data['link'][i] = '-l' + string + ' '
 
     folders = [data['root'], source_dir, include_dir, build_dir, ext_dir]
     files = [('cpp/source/main.cpp', path.join(source_dir, 'main.cpp')),
@@ -98,51 +148,10 @@ def load_files(data):
     if data['docs'] is True:
         doc_setting(data, folders, files, commands, replace)
 
-    if data['comp'] == "GNU Make":
-        files.append(("cpp/Makefile", path.join(data['root'], "Makefile")))
-        files.append(("cpp/source/Makefile", path.join(source_dir, "Makefile")))
-        if data['tests'] is True:
-            files.append(("cpp/test/Makefile", path.join(
-                data['root'], data['test_dir'], "Makefile")))
+    comp_settings(data, folders, files, commands, replace)
 
-            if data['ci'] is True:
-                ci_file = ["cpp/", ""]
-        if data['ci-server'] == "Travis-CI":
-            ci_file[0] += "travis"
-            ci_file[1] = path.join(data['root'], ".travis.yml")
-
-        if data['deploy-pages'] is True:
-            ci_file[0] += "_dp"
-
-        if data['coverage'] == "CodeCov":
-            ci_file[0] += "_cc"
-            files.append(("cpp/.codecov.yml", path.join(data['root'],
-                                                        ".codecov.yml")))
-
-            ci_file[0] += ".yml"
-        files.append(ci_file)
-
-        project_apt = "- sudo apt-get install "
-        if data['apt-install'] == []:
-            project_apt = ""
-        else:
-            for pack in data['apt-install']:
-                project_apt += str(pack) + ' '
-
-        replace.append(("project_apt", str(project_apt)))
-
-        print(project_apt)
-
-        project_pip = "- sudo pip install "
-        if data['pip-install'] == []:
-            project_pip = ""
-        else:
-            for pack in data['pip-install']:
-                project_pip += str(pack) + ' '
-
-        replace.append(("project_pip", str(project_pip)))
-
-        print(project_pip)
+    if data['ci'] is True:
+        ci_settings(data, folders, files, commands, replace)
 
     return folders, files, commands, replace
 
