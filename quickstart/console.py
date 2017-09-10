@@ -184,8 +184,9 @@ def select_list(data, name, disp, options, show_title=True):
                 print("\033[1A\r" + ' ' * 25 + '\r', end='')
         else:
             print("\033[1A\r" + ' ' * 25 + '\r', end='')
-        print(magenta("%s [%s]: " % (disp, options[0])) +
-              bold(white("%s" % options[select])))
+        print(
+            magenta("%s [%s]: " % (disp, options[0])) +
+            bold(white("%s" % options[select])))
     else:
         if name not in data:
             for i in range(0, len(options) + 2):
@@ -240,13 +241,13 @@ _attrs = {
 }
 
 _colors = {
-    'red': ('31m', '39m'),
-    'green': ('32m', '39m'),
-    'yellow': ('33m', '39m'),
-    'blue': ('34m', '39m'),
-    'magenta': ('35m', '39m'),
-    'cyan': ('36m', '39m'),
-    'grey': ('27m', '39m'),
+    'red': ('91m', '39m'),
+    'green': ('92m', '39m'),
+    'yellow': ('93m', '39m'),
+    'blue': ('94m', '39m'),
+    'magenta': ('95m', '39m'),
+    'cyan': ('96m', '39m'),
+    'grey': ('90m', '39m'),
     'white': ('97m', '39m')
 }
 

@@ -5,7 +5,7 @@ from os import path
 import quickstart.console as out
 #  import console as out
 
-__display_version__ = "v0.4"
+__display_version__ = "v0.5"
 
 __bin_dir__ = os.path.dirname(__file__)
 
@@ -45,8 +45,13 @@ def gen_files(files, replace):
     """Generates all files for project"""
     out.section("Files", 25)
     for source, dest in files:
-        write(source, dest, replace)
-        print(out.green("Copied ") + out.magenta("\"%s\"" % str(source)))
+        if path.isfile(source):
+            write(source, dest, replace)
+            print(out.green("Copied ") + out.magenta("\"%s\"" % str(source)))
+        else:
+            print(
+                out.red("File does not exist ") + out.magenta(
+                    "\"%s\"" % str(source)))
 
 
 def gen_commands(commands):
@@ -70,7 +75,7 @@ def main():
     out.clear()
     out.title("Quickstart Utility %s" % __display_version__, 25)
     data = {}
-    out.select_list(data, 'lang', "Languages", ["C++", "C++ (Default)"])
+    out.select_list(data, 'lang', "Languages", ["C++", "Python"])
     folders = []
     files = []
     print()
@@ -78,10 +83,9 @@ def main():
         import quickstart.languages.cpp as cpp
         #  import languages.cpp as cpp
         folders, files, commands, replace = cpp.main(data)
-    elif data['lang'] == "C++ (Default)":
-        import quickstart.languages.cpp as cpp
-        #  import languages.cpp as cpp
-        folders, files, commands, replace = cpp.default(data)
+    if data['lang'] == "Python":
+        import quickstart.languages.python as python
+        folders, files, commands, replace = python.main(data)
     else:
         print(out.red("Not a valid type \"%s\"" % data['lang']))
 
