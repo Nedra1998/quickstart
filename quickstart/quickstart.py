@@ -23,14 +23,18 @@ def write(source, dest, replace_list):
     replacement from replace_list
     """
     source = path.join(__bin_dir__, "templates/", source)
-    with open(source, 'r') as file:
-        filedata = file.read()
+    if path.isfile(source):
+        with open(source, 'r') as file:
+            filedata = file.read()
 
-    for search_str, replace_str in replace_list:
-        filedata = filedata.replace(search_str, replace_str)
+        for search_str, replace_str in replace_list:
+            filedata = filedata.replace(search_str, replace_str)
 
-    with open(dest, 'w') as file:
-        file.write(filedata)
+        with open(dest, 'w') as file:
+            file.write(filedata)
+        return True
+    else:
+        return False
 
 
 def gen_folders(folders):
@@ -45,8 +49,7 @@ def gen_files(files, replace):
     """Generates all files for project"""
     out.section("Files", 25)
     for source, dest in files:
-        if path.isfile(source):
-            write(source, dest, replace)
+        if write(source, dest, replace) is True:
             print(out.green("Copied ") + out.magenta("\"%s\"" % str(source)))
         else:
             print(

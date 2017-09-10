@@ -28,7 +28,7 @@ def doc_setting(data, folders, files, commands, replace):
     if data['doc-sys'] == "Sphinx":
         folders.append(path.join(doc_dir, 'source'))
         folders.append(path.join(doc_dir, 'source', '_static'))
-        files.append(('python/docs/Makefile', path.join(doc_dir, 'index.md')))
+        files.append(('python/docs/Makefile', path.join(doc_dir, 'Makefile')))
         files.append(('python/docs/source/conf.py', path.join(
             doc_dir, 'source', 'conf.py')))
         files.append(('python/docs/source/index.rst', path.join(
@@ -79,7 +79,11 @@ def load_files(data):
     source_dir = path.join(data['root'], data['name'])
 
     folders = [data['root'], source_dir]
-    files = [('python/source.py', path.join(source_dir, data['name'] + ".py"))]
+    files = [('python/source.py', path.join(
+        source_dir, data['name'] + ".py")), ('python/__init__.py', path.join(
+            source_dir, "__init__.py")), ('python/setup.py', path.join(
+                data['root'], "setup.py")), ('python/README.rst', path.join(
+                    data['root'], "README.rst"))]
     commands = []
     replace = []
     replace.append(("project_name", data['name']))
