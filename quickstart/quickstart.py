@@ -78,17 +78,19 @@ def main():
     out.clear()
     out.title("Quickstart Utility %s" % __display_version__, 25)
     data = {}
-    out.select_list(data, 'lang', "Languages", ["C++", "Python"])
+    out.select_list(data, 'lang', "Languages", ["C++", "Python", "Vim"])
     folders = []
     files = []
     print()
     if data['lang'] == "C++":
         import quickstart.languages.cpp as cpp
-        #  import languages.cpp as cpp
         folders, files, commands, replace = cpp.main(data)
     if data['lang'] == "Python":
         import quickstart.languages.python as python
         folders, files, commands, replace = python.main(data)
+    if data['lang'] == "Vim":
+        import quickstart.languages.vim as vim
+        folders, files, commands, replace = vim.main(data)
     else:
         print(out.red("Not a valid type \"%s\"" % data['lang']))
 
