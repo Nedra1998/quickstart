@@ -172,11 +172,10 @@ def main(data):
     else:
         out.prompt(data, 'root', 'Root directory', data['name'].lower(),
                    out.is_path)
-        out.prompt(data, 'source_dir', 'Source directory', 'source',
-                   out.is_path)
-        out.prompt(data, 'include_dir', 'Include directory', 'include',
-                   out.is_path)
-        out.prompt(data, 'build_dir', 'Build directory', 'build', out.is_path)
+
+    out.prompt(data, 'source_dir', 'Source directory', 'source', out.is_path)
+    out.prompt(data, 'include_dir', 'Include directory', 'include', out.is_path)
+    out.prompt(data, 'build_dir', 'Build directory', 'build', out.is_path)
     out.prompt(data, 'ext_dir', 'External directory', 'external', out.is_path)
     out.section("Unit Tests", 25)
     out.prompt(data, 'tests', 'Enable unit tests', 'Yes', out.boolean)
