@@ -1,0 +1,57 @@
+{
+    "Options": {
+        "General": [
+            ["name", "Project name", "", "str"],
+            ["description", "Project description", "", "any"],
+            ["git", "Create git repository", true, "boolean"]
+        ],
+        "Directories": [
+            ["source", "Source directory", "source", "path"],
+            ["include", "Include directory", "include", "path"],
+            ["build", "Build directory", "build", "path"],
+            ["external", "External directory", "external", "path"]
+        ],
+        "Unit Tests": [
+            ["tests", "Enable unit tests", true, "boolean"],
+            {
+                "check": ["tests", true],
+                "opts": [
+                    ["test_dir", "Test directory", "test", "path"]
+                ]
+            }
+        ],
+        "Documentation": [
+            ["docs", "Create documentation", true, "boolean"],
+            {
+                "check": ["docs", true],
+                "opts": [
+                    ["doc-sys", "Documentaton constructor", "None", "select_list", ["Sphinx", "MkDocs", "Markdown", "None"]],
+                    {
+                        "check": ["doc-sys", "Sphinx"],
+                        "opts": [
+                            ["author", "Sphinx Author", "", "str"],
+                            ["copyright", "Sphinx Copyright", "", "str"]
+                        ]
+                    },
+                    ["doc_dir", "Documentation directory", "docs", "path"]
+                ]
+            }
+        ],
+        "Compiling": [
+            ["comp", "Compiling system", "None", "select_list", ["GNU Make"]],
+            ["link", "Linked libraries", "", "list"]
+        ],
+        "Continuouse Integration": [
+            ["ci", "Enable continuous integrations services", true, "boolean"],
+            {
+                "check": ["ci", true],
+                "opts": [
+                    ["ci-service", "Continuous integration service", "None", "select_list", ["Travis-CI", "Jenkins", "Circle-CI"]],
+                    ["apt-install", "Install from apt", "", "list"],
+                    ["pip-install", "Install from pip", "", "list"],
+                    ["coverage", "Enable code coverage service", "None", "select_list", ["None", "CodeCov", "Coveralls"]]
+                ]
+            }
+        ]
+    }
+}

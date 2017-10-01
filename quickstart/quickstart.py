@@ -3,6 +3,7 @@
 import os
 from os import path
 import quickstart.console as out
+import quickstart.language as language
 #  import console as out
 
 __display_version__ = "v0.5"
@@ -25,7 +26,7 @@ def write(source, dest, replace_list):
     source = path.join(__bin_dir__, "templates/", source)
     if path.isfile(source):
         with open(source, 'r') as file:
-            filedata = file.read()
+            filedata = f < ile.read()
 
         for search_str, replace_str in replace_list:
             filedata = filedata.replace(search_str, replace_str)
@@ -75,26 +76,27 @@ def generate(files, folders, commands, replace):
 
 def main():
     """allows user to enter data for project, and genorates project"""
-    out.clear()
-    out.title("Quickstart Utility %s" % __display_version__, 25)
-    data = {}
-    out.select_list(data, 'lang', "Languages", ["C++", "Python", "Vim"])
-    folders = []
-    files = []
-    print()
-    if data['lang'] == "C++":
-        import quickstart.languages.cpp as cpp
-        folders, files, commands, replace = cpp.main(data)
-    if data['lang'] == "Python":
-        import quickstart.languages.python as python
-        folders, files, commands, replace = python.main(data)
-    if data['lang'] == "Vim":
-        import quickstart.languages.vim as vim
-        folders, files, commands, replace = vim.main(data)
-    else:
-        print(out.red("Not a valid type \"%s\"" % data['lang']))
+    language.read_options("cpp")
+    #  out.clear()
+    #  out.title("Quickstart Utility %s" % __display_version__, 25)
+    #  data = {}
+    #  out.select_list(data, 'lang', "Languages", ["C++", "Python", "Vim"])
+    #  folders = []
+    #  files = []
+    #  print()
+    #  if data['lang'] == "C++":
+#  import quickstart.languages.cpp as cpp
+#  folders, files, commands, replace = cpp.main(data)
+#  if data['lang'] == "Python":
+#  import quickstart.languages.python as python
+#  folders, files, commands, replace = python.main(data)
+#  if data['lang'] == "Vim":
+#  import quickstart.languages.vim as vim
+#  folders, files, commands, replace = vim.main(data)
+#  else:
+#  print(out.red("Not a valid type \"%s\"" % data['lang']))
 
-    generate(files, folders, commands, replace)
+#  generate(files, folders, commands, replace)
 
 
 if __name__ == "__main__":

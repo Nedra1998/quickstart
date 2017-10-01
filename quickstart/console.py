@@ -89,6 +89,10 @@ def term_input(prompt_str):
 
 def prompt(data, name, description, default=None, validator=nonempty, indent=0):
     """Runs prompt for specified data"""
+    if default is True:
+        default = "Yes"
+    elif default is False:
+        default = "No"
     if name in data:
         if default is not None:
             if data[name] is True:
