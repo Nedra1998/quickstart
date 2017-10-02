@@ -1,0 +1,41 @@
+{
+  "Options": {
+    "General": [
+      ["name", "Project name", "", "str"],
+      ["description", "Project description", "", "any"],
+      ["git", "Create git repository", true, "boolean"]
+    ],
+    "Directories": [
+      ["root_dir", "Root directory", "__name__", "path"],
+      ["source_dir", "Source directory", "__name__", "path"]
+    ],
+    "Unit Tests": [
+      ["tests", "Enable unit tests", true, "boolean"]
+    ],
+    "Documentation": [
+      ["docs", "Create documentation", true, "boolean"],
+      {
+        "check": ["docs", true],
+        "opts": [
+          ["doc-sys", "Documentation constructor", "None", "select_list", ["Sphinx", "Mkdocs", "Markdown", "rST", "None"]]
+        ]
+      }
+    ],
+    "Continuouse Integration": [
+      ["ci", "Enable continuous integrations services", true, "boolean"],
+      {
+        "check": ["ci", true],
+        "opts": [
+          ["ci-service", "Continuous integration service", "None", "select_list", ["Travis-CI", "Jenkins", "Circle-CI"]],
+          ["apt-install", "Install from apt", "", "list"],
+          ["pip-install", "Install from pip", "", "list"],
+          ["coverage", "Enable code coverage service", "None", "select_list", ["None", "CodeCov", "Coveralls"]]
+        ]
+      }
+    ]
+  },
+  "Data": [
+    ["file", "python/source.py", "source_dir", "__name__.py"],
+    []
+  ]
+}

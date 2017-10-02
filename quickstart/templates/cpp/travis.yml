@@ -27,7 +27,7 @@ script:
   - ./unit-test
 
 after_success:
-  - mkdocs build --clean --strict
+  project_coverage
 
 notifications:
   email: false

@@ -1,57 +1,149 @@
 {
-    "Options": {
-        "General": [
-            ["name", "Project name", "", "str"],
-            ["description", "Project description", "", "any"],
-            ["git", "Create git repository", true, "boolean"]
-        ],
-        "Directories": [
-            ["source", "Source directory", "source", "path"],
-            ["include", "Include directory", "include", "path"],
-            ["build", "Build directory", "build", "path"],
-            ["external", "External directory", "external", "path"]
-        ],
-        "Unit Tests": [
-            ["tests", "Enable unit tests", true, "boolean"],
-            {
-                "check": ["tests", true],
-                "opts": [
-                    ["test_dir", "Test directory", "test", "path"]
-                ]
-            }
-        ],
-        "Documentation": [
-            ["docs", "Create documentation", true, "boolean"],
-            {
-                "check": ["docs", true],
-                "opts": [
-                    ["doc-sys", "Documentaton constructor", "None", "select_list", ["Sphinx", "MkDocs", "Markdown", "None"]],
-                    {
-                        "check": ["doc-sys", "Sphinx"],
-                        "opts": [
-                            ["author", "Sphinx Author", "", "str"],
-                            ["copyright", "Sphinx Copyright", "", "str"]
-                        ]
-                    },
-                    ["doc_dir", "Documentation directory", "docs", "path"]
-                ]
-            }
-        ],
-        "Compiling": [
-            ["comp", "Compiling system", "None", "select_list", ["GNU Make"]],
-            ["link", "Linked libraries", "", "list"]
-        ],
-        "Continuouse Integration": [
-            ["ci", "Enable continuous integrations services", true, "boolean"],
-            {
-                "check": ["ci", true],
-                "opts": [
-                    ["ci-service", "Continuous integration service", "None", "select_list", ["Travis-CI", "Jenkins", "Circle-CI"]],
-                    ["apt-install", "Install from apt", "", "list"],
-                    ["pip-install", "Install from pip", "", "list"],
-                    ["coverage", "Enable code coverage service", "None", "select_list", ["None", "CodeCov", "Coveralls"]]
-                ]
-            }
+  "Options": {
+    "General": [
+      ["name", "Project name", "", "str"],
+      ["description", "Project description", "", "any"],
+      ["git", "Create git repository", true, "boolean"]
+    ],
+    "Directories": [
+      ["root_dir", "Root directory", "__name__", "path"],
+      ["source_dir", "Source directory", "source", "path"],
+      ["include_dir", "Include directory", "include", "path"],
+      ["build_dir", "Build directory", "build", "path"],
+      ["external_dir", "External directory", "external", "path"]
+    ],
+    "Unit Tests": [
+      ["tests", "Enable unit tests", true, "boolean"],
+      {
+        "check": ["tests", true],
+        "opts": [
+          ["test_dir", "Test directory", "test", "path"]
         ]
+      }
+    ],
+    "Documentation": [
+      ["docs", "Create documentation", true, "boolean"],
+      {
+        "check": ["docs", true],
+        "opts": [
+          ["doc-sys", "Documentaton constructor", "None", "select_list", ["Markdown", "Sphinx", "MkDocs", "None"]],
+          {
+            "check": ["doc-sys", "Sphinx"],
+            "opts": [
+              ["author", "Sphinx Author", "", "str"],
+              ["copyright", "Sphinx Copyright", "", "str"]
+            ]
+          },
+          ["doc_dir", "Documentation directory", "docs", "path"]
+        ]
+      }
+    ],
+    "Compiling": [
+      ["comp", "Compiling system", "None", "select_list", ["GNU Make"]],
+      ["link", "Linked libraries", "", "list"]
+    ],
+    "Continuouse Integration": [
+      ["ci", "Enable continuous integrations services", true, "boolean"],
+      {
+        "check": ["ci", true],
+        "opts": [
+          ["ci-service", "Continuous integration service", "None", "select_list", ["Travis-CI", "Jenkins", "Circle-CI"]],
+          ["apt-install", "Install from apt", "", "list"],
+          ["pip-install", "Install from pip", "", "list"],
+          ["coverage", "Enable code coverage service", "None", "select_list", ["None", "CodeCov", "Coveralls"]]
+        ]
+      }
+    ]
+  },
+  "Data": [
+    ["file", "cpp/source/main.cpp", "source_dir", "main.cpp"],
+    ["file", "cpp/clang-format", ".", "clang-format"],
+    ["file", "cpp/Makefile", ".", "Makefile"],
+    ["file", "cpp/source/Makefile", "source_dir", "Makefile"],
+    ["sub", "project_name", "name"],
+    ["sub", "project_title", "__title__"],
+    ["sub", "project_description", "description"],
+    ["sub", "project_source_dir", "source_dir"],
+    ["sub", "project_include_dir", "include_dir"],
+    ["sub", "project_build_dir", "build_dir"],
+    ["sub", "project_ext_dir", "external_dir"],
+    ["sub", "project_link", "link"],
+    {
+      "check": ["git", true],
+      "data": [
+        ["file", "cpp/.gitignore", ".", ".gitignore"],
+        ["exe", "git init", "."]
+      ]
+    },
+    {
+      "check": ["tests", true],
+      "data": [
+        ["file", "cpp/test/tmp.cpp", "test_dir", "tmp.cpp"],
+        ["file", "cpp/test/Makefile", "test_dir", "Makefile"],
+        ["file", "cpp/external/Makefile_t", "external_dir", "Makefile"],
+        ["sub", "project_test_dir", "test_dir"],
+        {
+          "check": ["git", true],
+          "data": [
+            ["exe", "git submodule add https://github.com/google/googletest", "external_dir"]
+          ]
+        },
+        {
+          "check": ["git", false],
+          "data": [
+            ["exe", "git clone https://github.com/google/googletest", "external_dir"]
+          ]
+        }
+      ]
+    },
+    {
+      "check": ["tests", false],
+      "data": [
+        ["file", "cpp/external/Makefile", "external_dir", "Makefile"]
+      ]
+    },
+    {
+      "check": ["docs", true],
+      "data": [
+        ["sub", "project_doc_dir", "doc_dir"],
+        {
+          "check": ["doc-sys", "Sphinx"],
+          "data": [
+            ["file", "cpp/docs/Makefile", "doc_dir", "Makefile"],
+            ["file", "cpp/docs/source/conf.py", "doc_dir", "source/conf.py"],
+            ["file", "cpp/docs/source/index.rst", "doc_dir", "source/index.rst"]
+          ]
+        },
+        {
+          "check": ["doc-sys", "MkDocs"],
+          "data": [
+            ["file", "cpp/mkdocs.yml", ".", "mkdocs.yml"],
+            ["file", "cpp/docs/index.md", "doc_dir", "index.md"]
+          ]
+        }
+      ]
+    },
+    {
+      "check": ["ci", true],
+      "data": [{
+          "check": ["ci-service", "Travis-CI"],
+          "data": [
+            ["file", "cpp/travis.yml", ".", ".travis.yml"]
+          ]
+        },
+        {
+          "check": ["coverage", "None"],
+          "data": [
+            ["sub", "project_coverage", "$"]
+          ]
+        },
+        {
+          "check": ["coverage", "CodeCov"],
+          "data": [
+            ["sub", "project_coverage", "$bash <(curl -s https://codecov.io/bash) || echo \"CodeCov Error\""]
+          ]
+        }
+      ]
     }
+  ]
 }

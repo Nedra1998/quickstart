@@ -26,10 +26,16 @@ def write(source, dest, replace_list):
     source = path.join(__bin_dir__, "templates/", source)
     if path.isfile(source):
         with open(source, 'r') as file:
-            filedata = f < ile.read()
+            filedata = file.read()
 
         for search_str, replace_str in replace_list:
-            filedata = filedata.replace(search_str, replace_str)
+            if isinstance(replace_str, str):
+                filedata = filedata.replace(search_str, replace_str)
+            elif isinstance(replace_str, list):
+                list_str = ''
+                for string in replace_str:
+                    list_str += ''.join(string) + ' '
+                filedata = filedata.replace(search_str, list_str)
 
         with open(dest, 'w') as file:
             file.write(filedata)
@@ -37,19 +43,19 @@ def write(source, dest, replace_list):
     else:
         return False
 
-
-def gen_folders(folders):
-    """Generates all folders for project"""
-    out.section("Folders", 25)
-    for folder in folders:
-        mkdir(folder)
-        print(out.green("Generated ") + out.magenta("\"%s\"" % folder))
+def gen_folder(dest):
+    if os.path.exists(os.path.dirname(dest)) is False:
+        gen_folder(os.path.dirname(dest))
+    os.mkdir(dest)
 
 
 def gen_files(files, replace):
     """Generates all files for project"""
     out.section("Files", 25)
     for source, dest in files:
+        tmp = dest
+        if os.path.exists(os.path.dirname(dest)) is False:
+            gen_folder(os.path.dirname(dest))
         if write(source, dest, replace) is True:
             print(out.green("Copied ") + out.magenta("\"%s\"" % str(source)))
         else:
@@ -66,37 +72,32 @@ def gen_commands(commands):
         print(out.green("Ran ") + out.magenta("\"%s\"" % str(exe)))
 
 
-def generate(files, folders, commands, replace):
+def generate(files, commands, replace):
     """Generates project folders/files/commands"""
     out.title("Genrating", 25)
-    gen_folders(folders)
     gen_files(files, replace)
     gen_commands(commands)
 
 
 def main():
     """allows user to enter data for project, and genorates project"""
-    language.read_options("cpp")
-    #  out.clear()
-    #  out.title("Quickstart Utility %s" % __display_version__, 25)
-    #  data = {}
-    #  out.select_list(data, 'lang', "Languages", ["C++", "Python", "Vim"])
-    #  folders = []
-    #  files = []
-    #  print()
-    #  if data['lang'] == "C++":
-#  import quickstart.languages.cpp as cpp
-#  folders, files, commands, replace = cpp.main(data)
-#  if data['lang'] == "Python":
-#  import quickstart.languages.python as python
-#  folders, files, commands, replace = python.main(data)
-#  if data['lang'] == "Vim":
-#  import quickstart.languages.vim as vim
-#  folders, files, commands, replace = vim.main(data)
-#  else:
-#  print(out.red("Not a valid type \"%s\"" % data['lang']))
+    out.clear()
+    out.title("Quickstart Utility %s" % __display_version__, 25)
+    data = {}
+    out.select_list(data, 'lang', "Languages", ["C++", "Python", "Vim"])
+    folders = []
+    files = []
+    print()
+    if data['lang'] == "C++":
+        files, commands, replace = language.read_options("cpp", data)
+    elif data['lang'] == "Python":
+        language.read_options("python", data)
+    elif data['lang'] == "Vim":
+        language.read_options("vim", data)
+    else:
+        print(out.red("Not a valid language \"{}\"".format(data['lang'])))
 
-#  generate(files, folders, commands, replace)
+    generate(files, commands, replace)
 
 
 if __name__ == "__main__":
