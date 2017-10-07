@@ -11,6 +11,8 @@ Languages
 ---------
 
  - ``C++``
+ - ``Python``
+ - ``Vim Script``
 
 
 Utilities
