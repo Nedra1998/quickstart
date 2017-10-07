@@ -12,11 +12,11 @@ source_suffix = ['.rst', '.md']
 master_doc = 'index'
 
 project = u'project_title'
-copyright = u'year, project_author'
-author = u'project_authro'
+copyright = u'__year__, project_author'
+author = u'project_author'
 
-version = u'project_version'
-release = u'project_version'
+version = u'0.0'
+release = u'0.0'
 
 language = None
 
@@ -28,7 +28,6 @@ todo_include_todos = False
 
 # -- Options for HTML output ----------------------------------------------
 
-#  import sphinx_bootstrap_theme
 
 html_theme = 'default'
 
@@ -103,7 +102,7 @@ man_pages = [(master_doc, 'project_name', u'project_title Documentation',
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'project_title', u'Form Documentation', author,
+    (master_doc, 'project_title', u'project_title Documentation', author,
      'project_title', 'project_description', 'Miscellaneous'),
 ]
 

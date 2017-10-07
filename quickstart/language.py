@@ -46,6 +46,13 @@ def get_option(data, option):
             for opts in option['opts']:
                 get_option(data, opts)
 
+def file_name_replace(data, files):
+    for idx, file in enumerate(files):
+        file_list = list(file)
+        file_list[1] = file_list[1].replace("__name__", data['name'])
+        file = tuple(file_list)
+        files[idx] = file
+    return files
 
 def get_section(data, section):
     """Gets user input for a section of the options"""
@@ -84,6 +91,8 @@ def read_cmd(data, cmd, files, exes, subs):
                 subs.append((cmd[1], cmd[2][1:]))
             elif cmd[2] == "__title__":
                 subs.append((cmd[1], data['name'].title()))
+            elif cmd[2] == "__underline__":
+                subs.append((cmd[1], "=" * len(data['name'])))
             else:
                 subs.append((cmd[1], data[cmd[2]]))
     elif isinstance(cmd, (dict, OrderedDict)) is True:
@@ -102,6 +111,7 @@ def read_data(data):
     subs = []
     for cmd in settings['Data']:
         read_cmd(data, cmd, files, exes, subs)
+    files = file_name_replace(data, files)
     print("FILES")
     pprint(files)
     print("EXES")

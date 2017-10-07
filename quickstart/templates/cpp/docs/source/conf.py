@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # -- General configuration ------------------------------------------------
 extensions = [
-    'sphinx.ext.coverage', 'sphinx.ext.imgmath', 'sphinx.ext.githubpages'
+    'sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.imgmath',
+    'sphinx.ext.githubpages'
 ]
 
 templates_path = ['_templates']
@@ -11,11 +12,11 @@ source_suffix = ['.rst', '.md']
 master_doc = 'index'
 
 project = u'project_title'
-copyright = u'year, project_author'
-author = u'project_authro'
+copyright = u'__year__, project_author'
+author = u'project_author'
 
-version = u'project_version'
-release = u'project_version'
+version = u'0.0'
+release = u'0.0'
 
 language = None
 
@@ -27,8 +28,6 @@ todo_include_todos = False
 
 # -- Options for HTML output ----------------------------------------------
 
-import sphinx_bootstrap_theme
-#  from crate.theme.rtd.conf import *
 
 html_theme = 'default'
 
@@ -36,16 +35,10 @@ html_show_sourcelink = False
 
 html_show_sphinx = False
 
-# (Optional) Logo. Should be small enough to fit the navbar (ideally 24x24).
-# Path should be relative to the ``_static`` files directory.
 #  html_logo = "my_logo.png"
 
-# Theme options are theme-specific and customize the look and feel of a
-# theme further.
 #  html_theme_options = {}
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
+
 html_static_path = ['_static']
 
 # Custom sidebar templates, must be a dictionary that maps document names
@@ -109,7 +102,7 @@ man_pages = [(master_doc, 'project_name', u'project_title Documentation',
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'project_title', u'Form Documentation', author,
+    (master_doc, 'project_title', u'project_title Documentation', author,
      'project_title', 'project_description', 'Miscellaneous'),
 ]
 

@@ -1,5 +1,5 @@
 project_title Documentation
-project_title_underline==============
+project_underline==============
 
 ------------------------------------------------------------------------------
 

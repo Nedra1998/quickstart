@@ -91,7 +91,8 @@ def main():
     if data['lang'] == "C++":
         files, commands, replace = language.read_options("cpp", data)
     elif data['lang'] == "Python":
-        language.read_options("python", data)
+        files, commands, replace = language.read_options("python", data)
+        #  language.read_options("python", data)
     elif data['lang'] == "Vim":
         language.read_options("vim", data)
     else:

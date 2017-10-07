@@ -57,7 +57,7 @@
   },
   "Data": [
     ["file", "cpp/source/main.cpp", "source_dir", "main.cpp"],
-    ["file", "cpp/clang-format", ".", "clang-format"],
+    ["file", "cpp/clang-format", ".", ".clang-format"],
     ["file", "cpp/Makefile", ".", "Makefile"],
     ["file", "cpp/source/Makefile", "source_dir", "Makefile"],
     ["sub", "project_name", "name"],
