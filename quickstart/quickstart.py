@@ -92,9 +92,8 @@ def main():
         files, commands, replace = language.read_options("cpp", data)
     elif data['lang'] == "Python":
         files, commands, replace = language.read_options("python", data)
-        #  language.read_options("python", data)
     elif data['lang'] == "Vim":
-        language.read_options("vim", data)
+        files, commands, replace = language.read_options("vim", data)
     else:
         print(out.red("Not a valid language \"{}\"".format(data['lang'])))
 

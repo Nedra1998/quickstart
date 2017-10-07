@@ -47,9 +47,11 @@ def get_option(data, option):
                 get_option(data, opts)
 
 def file_name_replace(data, files):
+    name_pref = os.path.splitext(data['name'])
     for idx, file in enumerate(files):
         file_list = list(file)
         file_list[1] = file_list[1].replace("__name__", data['name'])
+        file_list[1] = file_list[1].replace("__name_abr__", name_pref[0])
         file = tuple(file_list)
         files[idx] = file
     return files
@@ -112,10 +114,4 @@ def read_data(data):
     for cmd in settings['Data']:
         read_cmd(data, cmd, files, exes, subs)
     files = file_name_replace(data, files)
-    print("FILES")
-    pprint(files)
-    print("EXES")
-    pprint(exes)
-    print("SUBS")
-    pprint(subs)
     return files, exes, subs
