@@ -7,9 +7,15 @@
         "CC": ["clang", "gcc", "cc"],
         "CFLAGS": "",
         "BUILD": ["cmake", "make", "autools", "none"],
+        "tools": false,
         "DIRS": {
             "SOURCE": "src",
             "props.BUILD=make||props.BUILD=autools:BUILD": "build"
+        },
+        "props.tools=true:TOOLS": {
+            "ClangFormat": false,
+            "CI": true,
+            "props.TOOLS.CI=true:CI_SERVICE": ["circle", "travis", "none"]
         }
     },
     "cmds": [

@@ -5,6 +5,10 @@ import sys
 import os
 import subprocess
 
+import pprint
+
+# TODO: Test nested validation in file formatting.
+
 def select(title, prompt, options, default=-1):
     print(title)
     id_len = int(len(options) / 10)
@@ -67,14 +71,26 @@ def get_bool(key, default=None):
         elif val.lower() in ('yes', 'y', 't', 'true'):
             return True
 
-def extract_val(key, data):
-    current = key.split('.')[0]
-    key = '.'.join(key.split('.')[1:])
+def extract_val(key, data, delim='@'):
+    current = key.split(delim)[0]
+    key = delim.join(key.split(delim)[1:])
     if current in data:
-        if isinstance(data[current], dict):
-            return extract_val(key, data[current])
+        if isinstance(data[current], dict) and key:
+            return extract_val(key, data[current], delim)
         return data[current]
     return None
+
+def set_val(key, data, val, delim='@'):
+    current = key.split(delim)[0]
+    key = delim.join(key.split(delim)[1:])
+    if current in data and key and isinstance(data[current], dict):
+        set_val(key, data[current], val, delim)
+    elif key:
+        data[current] = {}
+        set_val(key, data[current], val, delim)
+    else:
+        data[current] = val
+
 
 def verify(expression, data):
     terms = [x.split('||') for x in expression.split('&&')]
@@ -86,7 +102,7 @@ def verify(expression, data):
                 var, val = state.split('!=')
             else:
                 var, val = state.split('=')
-            var = extract_val(var, data)
+            var = extract_val(var, data, '.')
             if var and isinstance(var, bool):
                 var = "true" if var else "false"
             if ('!=' in state and var and var != val) or ('=' in state and var and var == val):
@@ -130,7 +146,7 @@ def format_block(idx, src_lines, data):
     for i in range(idx+1, len(src_lines)):
         if src_lines[i].startswith("{%") and src_lines[i].endswith("%}"):
             if src_lines[i] == "{% end %}":
-                return i+1, lines
+                return i, lines
             if verify(src_lines[i].strip("{%").strip("%}").strip(), data):
                 i, tmp = format_block(i, src_lines, data)
                 lines += tmp
@@ -160,40 +176,41 @@ def format_file(source, dest, data):
     with open(dest, 'w') as out_file:
         out_file.write(out_lines)
 
-def get_props(data, section, base):
+def get_props(data, root, section, base):
     print("  \033[1;36m{}\033[0m".format(section))
-    keys = list(data.keys())
+    data_dict = extract_val(root, base)
+    keys = list(data_dict.keys())
     for key in keys:
         if "=" in key:
             expression, name = key.split(':')
             if verify(expression, base):
-                if isinstance(data[key], dict):
-                    data[name] = get_props(data[key], section + '.' + name, base)
-                elif isinstance(data[key], list):
-                    data[name]=select('    \033[1;92m{}\033[1;95m[{}]\033[1;92m:\033[0m'.format(key, data[key][0]), "\033[90m>>\033[0m ", data[key], 0)
-                elif isinstance(data[key], bool):
-                    data[name] = get_bool(name, data[key])
+                if isinstance(data_dict[key], dict):
+                    set_val(data + '@' + name, base, get_props(data + '@' + name, root + '@' + key, section + '.' + name, base))
+                elif isinstance(data_dict[key], list):
+                    set_val(data + '@' + name, base, select('    \033[1;92m{}\033[1;95m[{}]\033[1;92m:\033[0m'.format(key, data_dict[key][0]), "\033[90m>>\033[0m ", data_dict[key], 0))
+                elif isinstance(data_dict[key], bool):
+                    set_val(data + '@' + name, base, get_bool(name, data_dict[key]))
                 else:
                     attrs = []
                     if ';' in name:
                         attrs = name.split(';')[:-1]
                         name = name.split(';')[-1]
-                    data[name] = get_val(name, type(data[key]), attrs, data[key])
+                    set_val(data + '@' + name, base, get_val(name, type(data_dict[key]), attrs, data_dict[key]))
         else:
-            if isinstance(data[key], dict):
-                data[key] = get_props(data[key], section + '.' + key, base)
-            elif isinstance(data[key], list):
-                data[key]=select('    \033[1;92m{}\033[1;95m[{}]\033[1;92m:\033[0m'.format(key, data[key][0]), "\033[90m>>\033[0m ", data[key], 0)
-            elif isinstance(data[key], bool):
-                data[key]=get_bool(key, data[key])
+            if isinstance(data_dict[key], dict):
+                set_val(data + '@' + key, base, get_props(data + '@' + key, data + '@' + key, section + '.' + key, base))
+            elif isinstance(data_dict[key], list):
+                set_val(data + '@' + key, base, select('    \033[1;92m{}\033[1;95m[{}]\033[1;92m:\033[0m'.format(key, data_dict[key][0]), "\033[90m>>\033[0m ", data_dict[key], 0))
+            elif isinstance(data_dict[key], bool):
+                set_val(data + '@' + key, base, get_bool(key, data_dict[key]))
             else:
                 if ';' in key:
                     attrs = key.split(';')[:-1]
                     dest = key.split(';')[-1]
-                    data[dest]=get_val(dest, type(data[key]), attrs, data[key])
+                    set_val(data + '@' + dest, base, get_val(dest, type(data_dict[key]), attrs, data_dict[key]))
                 else:
-                    data[key]=get_val(key, type(data[key]), [], data[key])
-    return data
+                    set_val(data + '@' + key, base, get_val(key, type(data_dict[key]), [], data_dict[key]))
+    return extract_val(data, base)
 
 def exec_cmds(data, title, base):
     if isinstance(data, list):
@@ -228,12 +245,11 @@ def copy_files(data, title, root_dir, base):
                     format_file("{}/{}".format(root_dir, data[key]), "{}/{}".format(title, dest), base)
         else:
             if isinstance(data[key], dict):
-                data[key] = get_props(data[key], title, root_dir, base)
+                copy_files(data[key], title, root_dir, base)
             else:
                 dest = replace_str(key, base)
                 print("\033[92m  Creating {}...\033[0m".format(dest))
                 format_file("{}/{}".format(root_dir, data[key]), "{}/{}".format(title, dest), base)
-    return data
 
 
 
@@ -246,7 +262,8 @@ def main():
     with open('./templates/{}/cfg.json'.format(template), 'r') as load:
         data=json.load(load)
     print("\033[0;34mOptions\033[0m")
-    data['props'] = get_props(data['props'], 'Properties', data)
+    data['props'] = get_props('props', 'props', 'Properties', data)
+    pprint.pprint(data)
     os.mkdir('./{}/'.format(data['props']['NAME'].lower()))
     if 'pre_cmds' in data:
         print("\033[0;34mPre Commands\033[0m")
