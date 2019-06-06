@@ -1,116 +1,265 @@
-"""A setuptools based setup module.
-See:
-https://packaging.python.org/en/latest/distributing.html
-https://github.com/pypa/sampleproject
-"""
+#!/usr/bin/python3
 
-# Always prefer setuptools over distutils
-from setuptools import setup, find_packages
-# To use a consistent encoding
-from codecs import open
-from os import path
-
+import json
+import sys
 import os
+import subprocess
+
+def select(title, prompt, options, default=-1):
+    print(title)
+    id_len = int(len(options) / 10)
+    options.append("quit")
+    for i, opt in enumerate(options):
+        print("\033[1;30m{:{}})\033[0m {}".format(i+1, id_len, opt))
+    while True:
+        try:
+            num = input(prompt)
+            if num == "" and default != -1:
+                print("{}".format("\033[A\033[2K") * (len(options) + 2))
+                if title.endswith(':'):
+                    print("\033[A{}\033[0;1m{}\033[0m".format(title, options[default]))
+                else:
+                    print("\033[A{}\033[0;1m  {}\033[0m".format(title, options[default]))
+                return options[default]
+            num = int(num)
+        except ValueError:
+            continue
+        except:
+            sys.exit(0)
+        if 0 < num < len(options):
+            print("{}".format("\033[A\033[2K") * (len(options) + 2))
+            if title.endswith(':'):
+                print("\033[A{}\033[0;1m{}\033[0m".format(title, options[num-1]))
+            else:
+                print("\033[A{}\033[0;1m  {}\033[0m".format(title, options[num-1]))
+            return options[num-1]
+        elif num == len(options):
+            sys.exit(0)
+
+def get_val(key, vtype, attrs = [], default=None):
+    while True:
+        try:
+            if default is not None:
+                val = input("    \033[1;92m{}\033[1;95m[{}]\033[1;92m:\033[0;1m ".format(key, default))
+            else:
+                val = input("    \033[1;92m{}:\033[0;1m".format(key))
+            if val == "" and default is not None:
+                if 'REQUIRED' in attrs and default == "":
+                    print("    This property is required")
+                    continue
+                return default
+            return vtype(val)
+        except ValueError:
+            continue
+        except:
+            sys.exit(0)
+
+def get_bool(key, default=None):
+    while True:
+        if default is not None:
+            val = input("    \033[1;92m{}\033[1;95m[{}]\033[1;92m:\033[0;1m".format(key, "True" if default else "False"))
+        else:
+            val = input("    \033[1;92m{}:\033[0;1m".format(key))
+        if val == "" and default is not None:
+            return default
+        elif val.lower() in ('no', 'n', 'f', 'false'):
+            return False
+        elif val.lower() in ('yes', 'y', 't', 'true'):
+            return True
+
+def extract_val(key, data):
+    current = key.split('.')[0]
+    key = '.'.join(key.split('.')[1:])
+    if current in data:
+        if isinstance(data[current], dict):
+            return extract_val(key, data[current])
+        return data[current]
+    return None
+
+def verify(expression, data):
+    terms = [x.split('||') for x in expression.split('&&')]
+    res = []
+    for term in terms:
+        term_res = []
+        for state in term:
+            if '!=' in state:
+                var, val = state.split('!=')
+            else:
+                var, val = state.split('=')
+            var = extract_val(var, data)
+            if var and isinstance(var, bool):
+                var = "true" if var else "false"
+            if ('!=' in state and var and var != val) or ('=' in state and var and var == val):
+                term_res.append(True)
+                break
+            term_res.append(False)
+        res.append(any(term_res))
+        return all(res)
+
+def flatten_obj(key, data):
+    if isinstance(data, list):
+        res = {}
+        for i in range(len(data)):
+            if key == '':
+                res = {**res, **flatten_obj("{}".format(i), data[i])}
+            else:
+                res = {**res, **flatten_obj("{}.{}".format(key, i), data[i])}
+        return res
+    elif isinstance(data, dict):
+        res = {}
+        for ky in data.keys():
+            if key == '':
+                res = {**res, **flatten_obj("{}".format(ky), data[ky])}
+            else:
+                res = {**res, **flatten_obj("{}.{}".format(key, ky), data[ky])}
+        return res
+    else:
+        return {key: data}
+
+def replace_str(key, data):
+    flattend = flatten_obj('', data)
+    for ids in flattend.keys():
+        if '{{' + ids + '}}' in key:
+            key = key.replace('{{' + ids + '}}', flattend[ids])
+        if '{{ ' + ids + ' }}' in key:
+            key = key.replace('{{ ' + ids + ' }}', flattend[ids])
+    return key
+
+def format_block(idx, src_lines, data):
+    lines = []
+    for i in range(idx+1, len(src_lines)):
+        if src_lines[i].startswith("{%") and src_lines[i].endswith("%}"):
+            if src_lines[i] == "{% end %}":
+                return i+1, lines
+            if verify(src_lines[i].strip("{%").strip("%}").strip(), data):
+                i, tmp = format_block(i, src_lines, data)
+                lines += tmp
+            else:
+                i, _ = format_block(i, src_lines, data)
+        else:
+            lines.append(src_lines[i])
+    return len(src_lines), lines
+
+def format_file(source, dest, data):
+    with open(source, 'r') as in_file:
+        src_lines = [x.rstrip('\n') for x in in_file.readlines()];
+    lines = []
+    i = 0;
+    while i < len(src_lines):
+        if src_lines[i].startswith("{%") and src_lines[i].endswith("%}"):
+            if verify(src_lines[i].strip("{%").strip("%}").strip(), data):
+                i, tmp = format_block(i, src_lines, data)
+                lines += tmp
+            else:
+                i, _ = format_block(i, src_lines, data)
+        else:
+            lines.append(src_lines[i])
+        i += 1
+    out_lines = "\n".join(lines)
+    out_lines = replace_str(out_lines, data)
+    with open(dest, 'w') as out_file:
+        out_file.write(out_lines)
+
+def get_props(data, section, base):
+    print("  \033[1;36m{}\033[0m".format(section))
+    keys = list(data.keys())
+    for key in keys:
+        if "=" in key:
+            expression, name = key.split(':')
+            if verify(expression, base):
+                if isinstance(data[key], dict):
+                    data[name] = get_props(data[key], section + '.' + name, base)
+                elif isinstance(data[key], list):
+                    data[name]=select('    \033[1;92m{}\033[1;95m[{}]\033[1;92m:\033[0m'.format(key, data[key][0]), "\033[90m>>\033[0m ", data[key], 0)
+                elif isinstance(data[key], bool):
+                    data[name] = get_bool(name, data[key])
+                else:
+                    attrs = []
+                    if ';' in name:
+                        attrs = name.split(';')[:-1]
+                        name = name.split(';')[-1]
+                    data[name] = get_val(name, type(data[key]), attrs, data[key])
+        else:
+            if isinstance(data[key], dict):
+                data[key] = get_props(data[key], section + '.' + key, base)
+            elif isinstance(data[key], list):
+                data[key]=select('    \033[1;92m{}\033[1;95m[{}]\033[1;92m:\033[0m'.format(key, data[key][0]), "\033[90m>>\033[0m ", data[key], 0)
+            elif isinstance(data[key], bool):
+                data[key]=get_bool(key, data[key])
+            else:
+                if ';' in key:
+                    attrs = key.split(';')[:-1]
+                    dest = key.split(';')[-1]
+                    data[dest]=get_val(dest, type(data[key]), attrs, data[key])
+                else:
+                    data[key]=get_val(key, type(data[key]), [], data[key])
+    return data
+
+def exec_cmds(data, title, base):
+    if isinstance(data, list):
+        for cmd in data:
+            if isinstance(cmd, str):
+                cmd =replace_str(cmd, base)
+                print("\033[92m  Executing {}...\033[0m".format(cmd))
+                subprocess.run(['cd {} && {}'.format(title, cmd)], shell=True)
+            elif isinstance(cmd, dict):
+                exec_cmds(cmd, title, base)
+    elif isinstance(data, dict):
+        for key in data.keys():
+            if '=' in key and verify(key, base):
+                if isinstance(data[key], str):
+                    cmd = replace_str(data[key], base)
+                    print("\033[92m  Executing {}...\033[0m".format(cmd))
+                    subprocess.run(['cd {} && {}'.format(title, cmd)], shell=True)
+                elif isinstance(data[key], dict) or isinstance(data[key], list):
+                    exec_cmds(data[key], title, base)
+
+def copy_files(data, title, root_dir, base):
+    keys = list(data.keys())
+    for key in keys:
+        if "=" in key:
+            expression, name = key.split(':')
+            if verify(expression, base):
+                if isinstance(data[key], dict):
+                    copy_files(data[key], title, root_dir, base)
+                else:
+                    dest = replace_str(name, base)
+                    print("\033[92m  Creating {}...\033[0m".format(dest))
+                    format_file("{}/{}".format(root_dir, data[key]), "{}/{}".format(title, dest), base)
+        else:
+            if isinstance(data[key], dict):
+                data[key] = get_props(data[key], title, root_dir, base)
+            else:
+                dest = replace_str(key, base)
+                print("\033[92m  Creating {}...\033[0m".format(dest))
+                format_file("{}/{}".format(root_dir, data[key]), "{}/{}".format(title, dest), base)
+    return data
 
 
-def package_files(directory):
-    paths = []
-    for (path, directories, filenames) in os.walk(directory):
-        for filename in filenames:
-            paths.append(os.path.join('..', path, filename))
-    return paths
 
+def main():
+    templates = list(os.listdir('./templates/'))
+    if len(sys.argv) >= 2 and sys.argv[1] in templates:
+        template = sys.argv[1]
+    else:
+        template=select("\033[1;36mSelect template\033[0m", "\033[90m>>\033[0m ", templates)
+    with open('./templates/{}/cfg.json'.format(template), 'r') as load:
+        data=json.load(load)
+    print("\033[0;34mOptions\033[0m")
+    data['props'] = get_props(data['props'], 'Properties', data)
+    os.mkdir('./{}/'.format(data['props']['NAME'].lower()))
+    if 'pre_cmds' in data:
+        print("\033[0;34mPre Commands\033[0m")
+        exec_cmds(data['pre_cmds'], data['props']['NAME'], data)
+    if 'cmds' in data:
+        print("\033[0;34mCommands\033[0m")
+        exec_cmds(data['cmds'], data['props']['NAME'], data)
+    if 'files' in data:
+        print("\033[0;34mFiles\033[0m")
+        copy_files(data['files'], data['props']['NAME'], './templates/{}'.format(template), data)
+    if 'post_cmds' in data:
+        print("\033[0;34mPost Commands\033[0m")
+        exec_cmds(data['post_cmds'], data['props']['NAME'], data)
 
-extra_files = package_files('quickstart/templates')
-
-here = path.abspath(path.dirname(__file__))
-
-# Get the long description from the README file
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
-    long_description = f.read()
-
-setup(
-    name='Quickstart',
-
-    # Versions should comply with PEP440.  For a discussion on single-sourcing
-    # the version across setup.py and the project code, see
-    # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.6.0',
-    description='A utility to rappidly generate programming templates',
-    long_description=long_description,
-
-    # The project's main homepage.
-    url='https://github.com/LuxAtrumStudio/Quickstart',
-
-    # Author details
-    author='Arden Rasmussen',
-
-    # Choose your license
-    license='MIT',
-
-    # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
-    classifiers=[
-        # How mature is this project? Common values are
-        #   3 - Alpha
-        #   4 - Beta
-        #   5 - Production/Stable
-        'Development Status :: 4 - Beta',
-
-        # Indicate who your project is intended for
-        'Intended Audience :: Developers',
-        'Topic :: Software Development :: Build Tools',
-
-        # Pick your license as you wish (should match "license" above)
-        'License :: OSI Approved :: MIT License',
-
-        # Specify the Python versions you support here. In particular, ensure
-        # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-    ],
-
-    # What does your project relate to?
-    keywords='setuptools development',
-
-    # You can just specify the packages manually here if your project is
-    # simple. Or you can use find_packages().
-    packages=find_packages(exclude=['docs', 'tests']),
-
-    # Alternatively, if you want to distribute just a my_module.py, uncomment
-    # this:
-    #   py_modules=["my_module"],
-
-    # List run-time dependencies here.  These will be installed by pip when
-    # your project is installed. For an analysis of "install_requires" vs pip's
-    # requirements files see:
-    # https://packaging.python.org/en/latest/requirements.html
-    #  install_requires=['peppercorn'],
-
-    # List additional groups of dependencies here (e.g. development
-    # dependencies). You can install these using the following syntax,
-    # for example:
-    # $ pip install -e .[dev,test]
-    #  extras_require={
-    #  'dev': ['check-manifest'],
-    #  'test': ['coverage'],
-    #  },
-
-    # If there are data files included in your packages that need to be
-    # installed, specify them here.  If using Python 2.6 or less, then these
-    # have to be included in MANIFEST.in as well.
-    package_data={'': extra_files},
-
-    # Although 'package_data' is the preferred approach, in some case you may
-    # need to place data files outside of your packages. See:
-    # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files # noqa
-    # In this case, 'data_file' will be installed into '<sys.prefix>/my_data'
-    #  data_files=[('my_data', ['data/data_file'])],
-
-    # To provide executable scripts, use entry points in preference to the
-    # "scripts" keyword. Entry points provide cross-platform support and allow
-    # pip to create the appropriate form of executable for the target platform.
-    entry_points={
-        'console_scripts': ['Quickstart = quickstart.quickstart:main']
-    },)
+if __name__ == "__main__":
+    main()

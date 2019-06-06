@@ -1,4 +1,0 @@
-project_title
-project_underline
-
-project_description
