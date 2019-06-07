@@ -143,7 +143,8 @@ def replace_str(key, data):
 
 def format_block(idx, src_lines, data):
     lines = []
-    for i in range(idx+1, len(src_lines)):
+    i = idx+1
+    while i < len(src_lines):
         if src_lines[i].startswith("{%") and src_lines[i].endswith("%}"):
             if src_lines[i] == "{% end %}":
                 return i, lines
@@ -154,6 +155,7 @@ def format_block(idx, src_lines, data):
                 i, _ = format_block(i, src_lines, data)
         else:
             lines.append(src_lines[i])
+        i += 1
     return len(src_lines), lines
 
 def format_file(source, dest, data):
@@ -162,6 +164,7 @@ def format_file(source, dest, data):
     lines = []
     i = 0;
     while i < len(src_lines):
+        print(src_lines[i])
         if src_lines[i].startswith("{%") and src_lines[i].endswith("%}"):
             if verify(src_lines[i].strip("{%").strip("%}").strip(), data):
                 i, tmp = format_block(i, src_lines, data)
